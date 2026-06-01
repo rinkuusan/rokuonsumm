@@ -41,6 +41,10 @@ interface TranscriptDao {
     @Query("UPDATE transcripts SET audioDeleted = 1 WHERE segmentPath = :path")
     suspend fun markAudioDeleted(path: String)
 
+    /** 保持期間を過ぎた(=startTimeMs が cutoff より古い)未削除音声のパス一覧 */
+    @Query("SELECT segmentPath FROM transcripts WHERE audioDeleted = 0 AND startTimeMs < :cutoff")
+    suspend fun getStaleAudioPaths(cutoff: Long): List<String>
+
     @Query("DELETE FROM transcripts WHERE id = :id")
     suspend fun deleteById(id: Long)
 

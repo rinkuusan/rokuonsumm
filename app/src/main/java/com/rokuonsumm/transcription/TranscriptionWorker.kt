@@ -169,16 +169,20 @@ class TranscriptionWorker(
                 )
             )
             OpLog.i(applicationContext, "transcription.saved", "file=${file.name} len=${text.length} spk=$speakerLabel")
-            // 自動クラスタ(人物N)の音声は「後で耳で確認して命名する」ため残す。
-            // 既知話者/不明(一見さん)は autoDelete 設定通り。
-            val keepForNaming = speakerLabel?.startsWith("人物") == true
-            if (autoDelete && !keepForNaming) {
-                file.delete()
-                app.db.transcriptDao().markAudioDeleted(path)
-                Log.i(TAG, "transcribed and deleted: ${file.name}")
-            } else {
-                Log.i(TAG, "transcribed (kept audio${if (keepForNaming) ", for naming" else ""}): ${file.name}")
+            // 音声は即削除しない。タイムラインで「この声、誰?」を耳で確認して命名できるよう
+            // AUDIO_RETENTION_MS(=1日)は残す。autoDelete有効時は保持期間を過ぎた分だけ掃除する。
+            if (autoDelete) {
+                val cutoff = System.currentTimeMillis() - AUDIO_RETENTION_MS
+                var swept = 0
+                for (p in app.db.transcriptDao().getStaleAudioPaths(cutoff)) {
+                    File(p).delete()
+                    app.db.transcriptDao().markAudioDeleted(p)
+                    swept++
+                }
+                if (swept > 0) OpLog.i(applicationContext, "audio.retention_sweep",
+                    "deleted=$swept older_than=${AUDIO_RETENTION_MS / 3_600_000}h")
             }
+            Log.i(TAG, "transcribed (audio kept ~${AUDIO_RETENTION_MS / 3_600_000}h): ${file.name}")
             Result.success()
         } catch (e: Exception) {
             tempWav?.delete()
@@ -258,6 +262,7 @@ class TranscriptionWorker(
         private const val MAX_RETRIES      = 3
         private const val MAX_KEY_RETRIES  = 2  // APIキー未設定時の追加猶予
         private const val MIN_AUDIO_BYTES  = 2_000L  // これ未満は実音声なしとみなしスキップ
+        private const val AUDIO_RETENTION_MS = 24L * 60 * 60 * 1000  // 音声保持期間(命名のため1日残す)
         private const val TAG              = "TranscriptionWorker"
         const val TAG_TRANSCRIPTION        = "transcription"  // WorkManager タグ (進捗監視用)
 

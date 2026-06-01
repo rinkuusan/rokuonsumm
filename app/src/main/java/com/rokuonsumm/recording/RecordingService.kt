@@ -401,6 +401,8 @@ class RecordingService : LifecycleService() {
         watchdogJob = lifecycleScope.launch {
             while (true) {
                 delay(WATCHDOG_INTERVAL_MS)
+                // イベント取りこぼしで固着した停止理由を実機状態から自己修復
+                revalidatePauseReasons()
                 if (shouldBeRecording &&
                     state != RecordingState.RECORDING &&
                     pauseReasons.isEmpty() &&
@@ -412,6 +414,29 @@ class RecordingService : LifecycleService() {
                     startSegment()
                 }
             }
+        }
+    }
+
+    /**
+     * 停止理由(動画再生/マイク奪取)は OS のコールバックで付け外しするが、
+     * 「解除」イベントを取りこぼすと録音が止まったまま固着する。
+     * ウォッチドッグ毎に実機の現在状態を再照会し、要因が消えていればクリアする。
+     * (PHONE_CALL は着信リスナが堅いので対象外。MEDIA は意図的pauseなので“継続中なら維持”)
+     */
+    private fun revalidatePauseReasons() {
+        if (PauseReason.MEDIA_PLAYING in pauseReasons) {
+            val stillPlaying = runCatching {
+                audioManager.activePlaybackConfigurations.any {
+                    it.audioAttributes.usage == AudioAttributes.USAGE_MEDIA
+                }
+            }.getOrDefault(false)
+            if (!stillPlaying) removePauseReason(PauseReason.MEDIA_PLAYING)
+        }
+        if (PauseReason.MIC_STOLEN in pauseReasons) {
+            val stillSilenced = runCatching {
+                audioManager.activeRecordingConfigurations.any { it.isClientSilenced }
+            }.getOrDefault(false)
+            if (!stillSilenced) removePauseReason(PauseReason.MIC_STOLEN)
         }
     }
 
@@ -489,7 +514,7 @@ class RecordingService : LifecycleService() {
         private const val RESUME_DELAY_MS     = 500L   // 解放側アプリのマイク保持残存対策
         private const val ERROR_RETRY_BASE_MS = 2_000L // 指数バックオフ基底
         private const val MAX_ERROR_RETRIES   = 3      // 最大リトライ回数
-        private const val WATCHDOG_INTERVAL_MS = 20_000L // 録音復帰チェック間隔
+        private const val WATCHDOG_INTERVAL_MS = 8_000L  // 録音復帰チェック間隔(しつこめ)
 
         private val _stateFlow = MutableStateFlow(RecordingState.IDLE)
         val stateFlow: StateFlow<RecordingState> = _stateFlow

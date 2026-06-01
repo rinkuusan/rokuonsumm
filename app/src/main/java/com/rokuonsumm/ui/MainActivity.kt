@@ -173,6 +173,13 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         viewModel.refresh()
+        // アプリを開いた時、録音すべきなのにサービスが止まっていたら復帰させる。
+        // (MIUI 等にバックグラウンドサービスを殺された場合の保険。前景なのでFGS起動可)
+        val shouldRecord = getSharedPreferences("rec_state", MODE_PRIVATE)
+            .getBoolean("should_be_recording", false)
+        if (shouldRecord && RecordingService.stateFlow.value != RecordingService.RecordingState.RECORDING) {
+            startRecording()
+        }
     }
 
     /** 文字起こし状況チップの表示更新。残り0件なら隠す。 */
