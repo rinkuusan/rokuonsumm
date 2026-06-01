@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_filter_speaker"
+        android:icon="@drawable/ic_filter"
+        android:title="話者で絞り込み"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_copy_all"
+        android:title="全文をコピー"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_copy_template"
+        android:title="用途別にコピー (要約/スライド/日記…)"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_copy_summary"
+        android:title="要約をコピー"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_share_all"
+        android:title="全文を共有"
+        app:showAsAction="never" />
+</menu>

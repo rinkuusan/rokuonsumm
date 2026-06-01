@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">録音サマリー</string>
+    <string name="channel_recording_name">録音中</string>
+    <string name="channel_recording_desc">マイク ForegroundService が動作中です</string>
+    <string name="channel_alerts_name">アラート</string>
+    <string name="channel_alerts_desc">ストレージ警告など</string>
+    <string name="notif_recording">録音中</string>
+    <string name="notif_paused">一時停止中</string>
+    <string name="notif_idle">待機中</string>
+    <string name="action_stop">停止</string>
+    <string name="boot_notification_title">録音を再開してください</string>
+    <string name="boot_notification_text">タップして録音を再開</string>
+    <string name="storage_warning_title">ストレージ残量警告</string>
+    <string name="storage_warning_text">残り %d MB — 不要な音声を削除してください</string>
+
+    <!-- ストレージ管理 -->
+    <string name="storage_used">録音ファイル %1$d 件 / %2$s MB</string>
+    <string name="storage_empty">録音ファイルがありません</string>
+    <string name="action_delete_all">すべて削除</string>
+    <string name="delete_all_title">録音ファイルをすべて削除</string>
+    <string name="delete_all_message">%d 件の録音ファイルを削除します。この操作は取り消せません。</string>
+    <string name="storage_deleted">%d 件を削除しました</string>
+    <string name="btn_audio_list">録音ファイルを見る</string>
+
+    <!-- 設定画面 -->
+    <string name="action_settings">設定</string>
+    <string name="settings_title">設定</string>
+    <string name="settings_groq_key_section">Groq API キー（文字起こし用）</string>
+    <string name="settings_groq_key_hint">gsk_...</string>
+    <string name="settings_model_section">文字起こしモデル</string>
+    <string name="settings_model_turbo">whisper-large-v3-turbo（推奨 / 高速）</string>
+    <string name="settings_model_full">whisper-large-v3（高精度 / 遅い）</string>
+    <string name="settings_battery_section">バッテリー最適化</string>
+    <string name="settings_battery_ok">除外済み — Doze に強い状態です</string>
+    <string name="settings_battery_warn">未除外 — 夜間に録音が止まる可能性があります</string>
+    <string name="settings_battery_action">除外設定を開く</string>
+    <string name="settings_save">保存して閉じる</string>
+    <string name="settings_saved">保存しました</string>
+
+    <!-- メイン画面 -->
+    <string name="btn_stop_recording">録音停止</string>
+    <string name="btn_start_recording">録音開始</string>
+
+    <!-- エクスポート -->
+    <string name="action_export">エクスポート</string>
+    <string name="export_dialog_title">%d 件をエクスポート</string>
+    <string name="export_option_zip">ZIPファイルとして外部ストレージに保存</string>
+    <string name="export_option_share">他のアプリへ共有（ZIP）</string>
+    <string name="export_zip_done">%1$d 件を ZIP 保存しました\n%2$s</string>
+    <string name="export_share_chooser">録音ファイルを共有</string>
+
+    <!-- 録音ファイル一覧 -->
+    <string name="action_audio_list">一覧</string>
+    <string name="audio_list_title">録音ファイル一覧</string>
+    <string name="status_pending">文字起こし待ち</string>
+    <string name="status_done">文字起こし済</string>
+    <string name="empty_audio_list">録音ファイルがありません</string>
+    <string name="action_delete_selected">削除</string>
+    <string name="selected_count">%d 件選択中</string>
+    <string name="delete_selected_title">%d 件を削除</string>
+    <string name="delete_selected_message">この操作は取り消せません。</string>
+    <string name="deleted_files">%d 件を削除しました</string>
+</resources>

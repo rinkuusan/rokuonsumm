@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ (API 31+) のCloud Backup・Device Transfer設定 -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="rokuonsumm.db" />
+        <include domain="database" path="rokuonsumm.db-wal" />
+        <include domain="database" path="rokuonsumm.db-shm" />
+        <include domain="file" path="datastore/" />
+        <exclude domain="file" path="segments/" />
+        <exclude domain="external" path="segments/" />
+        <exclude domain="file" path="op_log.txt" />
+        <exclude domain="file" path="op_log.old.txt" />
+        <exclude domain="file" path="crash_log.txt" />
+        <exclude domain="file" path="state_log.csv" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="database" path="rokuonsumm.db" />
+        <include domain="database" path="rokuonsumm.db-wal" />
+        <include domain="database" path="rokuonsumm.db-shm" />
+        <include domain="file" path="datastore/" />
+        <include domain="external" path="segments/" />
+    </device-transfer>
+</data-extraction-rules>

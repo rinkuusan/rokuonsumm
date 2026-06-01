@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/tvRecTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="「純」の声を録音"
+        android:textColor="#F0F0F0"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="本人だけが20秒ほど自然に話してください\n(他の人やテレビの音が入らないように)"
+        android:textColor="#9CA3AF"
+        android:textSize="13sp"
+        android:lineSpacingMultiplier="1.4" />
+
+    <TextView
+        android:id="@+id/tvTimer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="0:00"
+        android:textColor="#4CAF50"
+        android:textSize="40sp"
+        android:fontFamily="monospace" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnRecToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:paddingHorizontal="32dp"
+        android:text="録音開始"
+        app:cornerRadius="24dp" />
+
+</LinearLayout>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11以下のAuto Backup設定 -->
+<full-backup-content>
+    <!-- DBは含める (トランスクリプト・要約は保持) -->
+    <include domain="database" path="rokuonsumm.db" />
+    <include domain="database" path="rokuonsumm.db-wal" />
+    <include domain="database" path="rokuonsumm.db-shm" />
+    <!-- DataStore設定 (API キー・モデル選択・フィルタ設定) -->
+    <include domain="file" path="datastore/" />
+    <!-- 音声ファイルは大きいので除外 (25MB制限あり) -->
+    <exclude domain="file" path="segments/" />
+    <exclude domain="external" path="segments/" />
+    <!-- ログも除外 -->
+    <exclude domain="file" path="op_log.txt" />
+    <exclude domain="file" path="op_log.old.txt" />
+    <exclude domain="file" path="crash_log.txt" />
+    <exclude domain="file" path="state_log.csv" />
+</full-backup-content>

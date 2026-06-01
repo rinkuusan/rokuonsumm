@@ -1,0 +1,38 @@
+# ── Android / Gradle build outputs ──
+build/
+.gradle/
+*.apk
+*.aab
+*.aar
+*.ap_
+*.dex
+*.class
+
+# ── Machine-specific config ──
+local.properties
+
+# ── IDE ──
+.idea/
+.kotlin/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Debug scratch / 個人データ (絶対にコミットしない) ──
+# 開発中に端末から吸い出したDB・ログ・スクショには利用者の私生活が入る
+/_*.txt
+/_*.png
+/_db/
+/test_run/
+*.log
+crash_log.txt
+
+# ── Local dumps ──
+*.db
+*.db-wal
+*.db-shm
