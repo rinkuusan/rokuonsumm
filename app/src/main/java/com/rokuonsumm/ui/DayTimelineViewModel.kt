@@ -31,7 +31,8 @@ sealed class TimelineUiItem {
         val transcriptId: Long,
         val timeText: String,
         val text: String,
-        val speakerLabel: String? = null
+        val speakerLabel: String? = null,
+        val flagged: Boolean = false   // 品質ゲートで要確認(反復/非音声/低信頼)
     ) : TimelineUiItem()
     data class PendingBlock(val timeRangeText: String, val count: Int) : TimelineUiItem()
     object EmptyDay : TimelineUiItem()
@@ -276,14 +277,23 @@ class DayTimelineViewModel(app: Application) : AndroidViewModel(app) {
             }
             .sortedBy { it.second }
 
+        // 品質フラグ(要確認マーク)は既定閾値で算出。設定で厳密に見るのは再フィルタの計測側。
+        val qThr = com.rokuonsumm.transcription.TranscriptQuality.Thresholds(
+            com.rokuonsumm.data.prefs.AppPreferences.DEFAULT_Q_NOSPEECH_MAX,
+            com.rokuonsumm.data.prefs.AppPreferences.DEFAULT_Q_COMPRESSION_MAX,
+            com.rokuonsumm.data.prefs.AppPreferences.DEFAULT_Q_AVGLOGPROB_MIN,
+            com.rokuonsumm.data.prefs.AppPreferences.DEFAULT_Q_REP_MIN_COUNT
+        )
+
         // Build combined timeline: each item has a start time, either Paragraph or PendingFile
-        data class Entry(val startMs: Long, val endMs: Long, val transcriptId: Long?, val text: String?, val speaker: String?)
+        data class Entry(val startMs: Long, val endMs: Long, val transcriptId: Long?, val text: String?, val speaker: String?, val flagged: Boolean)
         val entries = mutableListOf<Entry>()
         dayTranscripts.forEach {
-            entries += Entry(it.startTimeMs, it.endTimeMs, it.id, it.text.trim(), it.speakerLabel)
+            val flagged = com.rokuonsumm.transcription.TranscriptQuality.evaluate(it, qThr).any
+            entries += Entry(it.startTimeMs, it.endTimeMs, it.id, it.text.trim(), it.speakerLabel, flagged)
         }
         pendingFiles.forEach {
-            entries += Entry(it.second, it.third, null, null, null)
+            entries += Entry(it.second, it.third, null, null, null, false)
         }
         entries.sortBy { it.startMs }
 
@@ -330,7 +340,8 @@ class DayTimelineViewModel(app: Application) : AndroidViewModel(app) {
                     transcriptId = e.transcriptId,
                     timeText = timeFmt.format(java.util.Date(e.startMs)),
                     text = e.text,
-                    speakerLabel = e.speaker
+                    speakerLabel = e.speaker,
+                    flagged = e.flagged
                 )
             } else {
                 // pending: extend or start

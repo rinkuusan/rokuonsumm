@@ -132,7 +132,8 @@ class TranscriptionWorker(
             .joinToString("、")
 
         return try {
-            val (text, startMs, endMs) = callGroqApi(sendFile, sendMime, file, apiKey, model, segMin, prompt)
+            val gr = callGroqApi(sendFile, sendMime, file, apiKey, model, segMin, prompt)
+            val text = gr.text; val startMs = gr.startMs; val endMs = gr.endMs
             tempWav?.delete()  // 送信済みの一時WAVを掃除
 
             // フィラー幻覚チェック (DB保存前)
@@ -165,7 +166,10 @@ class TranscriptionWorker(
                     endTimeMs   = endMs,
                     text        = cleanText,
                     speakerLabel = speakerLabel,
-                    speakerEmbedding = speakerEmbBytes
+                    speakerEmbedding = speakerEmbBytes,
+                    noSpeechProb = gr.noSpeechProb,
+                    compressionRatio = gr.compressionRatio,
+                    avgLogprob = gr.avgLogprob
                 )
             )
             OpLog.i(applicationContext, "transcription.saved", "file=${file.name} len=${text.length} spk=$speakerLabel")
@@ -219,7 +223,7 @@ class TranscriptionWorker(
         model: String,
         segMin: Int,
         prompt: String
-    ): Triple<String, Long, Long> = withContext(Dispatchers.IO) {
+    ): GroqResult = withContext(Dispatchers.IO) {
         val startMs = parseSegmentStartMs(timeRefFile)
         val endMs   = startMs + segMin * 60_000L
 
@@ -227,7 +231,7 @@ class TranscriptionWorker(
             .setType(MultipartBody.FORM)
             .addFormDataPart("file", sendFile.name, sendFile.asRequestBody(sendMime.toMediaType()))
             .addFormDataPart("model", model)
-            .addFormDataPart("response_format", "json")
+            .addFormDataPart("response_format", "verbose_json")  // セグメント別メタデータ取得
             .addFormDataPart("language", "ja")
             .addFormDataPart("temperature", "0")  // 決定論的デコード (VADで無音除去済みなので幻覚ループ無し)
         if (prompt.isNotBlank()) builder.addFormDataPart("prompt", prompt)
@@ -244,9 +248,35 @@ class TranscriptionWorker(
             throw IOException("Groq API ${response.code}: $errorBody")
         }
 
-        val text = JSONObject(response.body!!.string()).getString("text")
-        Triple(text, startMs, endMs)
+        val json = JSONObject(response.body!!.string())
+        val text = json.getString("text")
+        // verbose_json のセグメント別メタデータを worst-case 集約 (Point 1)
+        // no_speech/compression は最大、avg_logprob は最小を採る。
+        var maxNoSpeech: Float? = null
+        var maxCompression: Float? = null
+        var minAvgLogprob: Float? = null
+        json.optJSONArray("segments")?.let { segs ->
+            for (i in 0 until segs.length()) {
+                val s = segs.getJSONObject(i)
+                s.optDouble("no_speech_prob").toFloat().let { v ->
+                    if (!v.isNaN() && (maxNoSpeech == null || v > maxNoSpeech!!)) maxNoSpeech = v
+                }
+                s.optDouble("compression_ratio").toFloat().let { v ->
+                    if (!v.isNaN() && (maxCompression == null || v > maxCompression!!)) maxCompression = v
+                }
+                if (s.has("avg_logprob")) {
+                    val v = s.getDouble("avg_logprob").toFloat()
+                    if (minAvgLogprob == null || v < minAvgLogprob!!) minAvgLogprob = v
+                }
+            }
+        }
+        GroqResult(text, startMs, endMs, maxNoSpeech, maxCompression, minAvgLogprob)
     }
+
+    private data class GroqResult(
+        val text: String, val startMs: Long, val endMs: Long,
+        val noSpeechProb: Float?, val compressionRatio: Float?, val avgLogprob: Float?
+    )
 
     private fun parseSegmentStartMs(file: File): Long {
         val namePart = file.nameWithoutExtension.removePrefix("seg_")

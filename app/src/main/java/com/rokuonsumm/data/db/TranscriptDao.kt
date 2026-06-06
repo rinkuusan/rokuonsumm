@@ -22,6 +22,10 @@ interface TranscriptDao {
     @Query("SELECT id, text FROM transcripts")
     suspend fun getAllIdsAndTexts(): List<IdText>
 
+    /** 品質計測(Point 5)用: メタデータ込みの全行スナップショット */
+    @Query("SELECT * FROM transcripts")
+    suspend fun getAllFull(): List<TranscriptEntity>
+
     /**
      * 全文検索 (LIKE 部分一致)。日本語は単語境界が曖昧なため、トークナイズ不要の
      * 部分一致が最適。空文字は呼び出し側で弾く。新しい順、上限200件。

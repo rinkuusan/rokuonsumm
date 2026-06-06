@@ -127,7 +127,9 @@ class TimelineAdapter(
             }
             is TimelineUiItem.Paragraph -> {
                 holder as ParagraphVH
-                holder.tvTime.text = item.timeText
+                // 品質ゲートで要確認の行は時刻に ⚠ を付けてオレンジ表示(本文は残す=非破壊)
+                holder.tvTime.text = if (item.flagged) "⚠ ${item.timeText}" else item.timeText
+                holder.tvTime.setTextColor(if (item.flagged) 0xFFFFA726.toInt() else 0xFF6B7280.toInt())
                 holder.tvText.text = item.text
                 val label = item.speakerLabel
                 if (label.isNullOrBlank()) {

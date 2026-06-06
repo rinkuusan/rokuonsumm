@@ -49,7 +49,32 @@ class RefilterWorker(
         }
         OpLog.i(applicationContext, "refilter.done", "deleted=$deleted cleaned=$cleaned scanned=${rows.size}")
 
-        Result.success(workDataOf("deleted" to deleted, "cleaned" to cleaned, "scanned" to rows.size))
+        // ── Point 5: 品質フラグ計測 (反復/非音声/低信頼) を全体+日別に集計してログ出力 ──
+        val thr = TranscriptQuality.Thresholds(
+            app.prefs.qNoSpeechMaxFlow.first(),
+            app.prefs.qCompressionMaxFlow.first(),
+            app.prefs.qAvgLogprobMinFlow.first(),
+            app.prefs.qRepMinCountFlow.first()
+        )
+        val all = dao.getAllFull()
+        val totals = TranscriptQuality.tally(all, thr)
+        OpLog.i(applicationContext, "quality.total",
+            "scanned=${totals.scanned} hasMeta=${totals.hasMeta} rep=${totals.repetition} " +
+                "repTextOnly=${totals.repByTextOnly} nonSpeech=${totals.nonSpeech} lowConf=${totals.lowConf}")
+        val dayFmt = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        all.groupBy { dayFmt.format(java.util.Date(it.startTimeMs)) }
+            .entries.sortedByDescending { it.key }
+            .forEach { (day, dayRows) ->
+                val t = TranscriptQuality.tally(dayRows, thr)
+                if (t.repetition > 0 || t.nonSpeech > 0 || t.lowConf > 0)
+                    OpLog.i(applicationContext, "quality.day",
+                        "day=$day n=${t.scanned} rep=${t.repetition} nonSpeech=${t.nonSpeech} lowConf=${t.lowConf}")
+            }
+
+        Result.success(workDataOf(
+            "deleted" to deleted, "cleaned" to cleaned, "scanned" to rows.size,
+            "repFlagged" to totals.repetition
+        ))
     }
 
     companion object {

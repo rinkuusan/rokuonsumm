@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [TranscriptEntity::class, SummaryEntity::class, SpeakerProfileEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -52,13 +52,26 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * v3→v4: 文字起こし品質メタデータ(verbose_json)の追加。
+         * transcripts に no_speech/avg_logprob/compression を nullable REAL で追加。
+         * 旧行は null のまま(=メタゲート対象外、テキスト反復検出のみ遡及適用)。
+         */
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE transcripts ADD COLUMN noSpeechProb REAL")
+                db.execSQL("ALTER TABLE transcripts ADD COLUMN avgLogprob REAL")
+                db.execSQL("ALTER TABLE transcripts ADD COLUMN compressionRatio REAL")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase =
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "rokuonsumm.db"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { INSTANCE = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build().also { INSTANCE = it }
             }
     }
 }

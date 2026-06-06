@@ -15,7 +15,14 @@ data class TranscriptEntity(
     /** 話者ラベル。null=未識別 / 話者名 / "不明"(=テレビ/動画/来客等) */
     val speakerLabel: String? = null,
     /** この発話の代表声紋(192次元 little-endian)。後からの命名・再クラスタ用。null=未計算 */
-    val speakerEmbedding: ByteArray? = null
+    val speakerEmbedding: ByteArray? = null,
+    // ── 品質メタデータ(verbose_json, ファイル内セグメントを worst-case 集約) null=旧データ ──
+    /** no_speech_prob の最大値。高い=非音声混入の疑い */
+    val noSpeechProb: Float? = null,
+    /** avg_logprob の最小値。低い=低信頼(本文は残すが要確認) */
+    val avgLogprob: Float? = null,
+    /** compression_ratio の最大値。高い=反復幻覚の疑い */
+    val compressionRatio: Float? = null
 ) {
     // ByteArray を含むため equals/hashCode は声紋を除いて生成 (DiffUtilの無駄な再描画防止)
     override fun equals(other: Any?): Boolean {
@@ -24,7 +31,9 @@ data class TranscriptEntity(
         return id == other.id && segmentPath == other.segmentPath &&
             startTimeMs == other.startTimeMs && endTimeMs == other.endTimeMs &&
             text == other.text && audioDeleted == other.audioDeleted &&
-            createdAt == other.createdAt && speakerLabel == other.speakerLabel
+            createdAt == other.createdAt && speakerLabel == other.speakerLabel &&
+            noSpeechProb == other.noSpeechProb && avgLogprob == other.avgLogprob &&
+            compressionRatio == other.compressionRatio
     }
     override fun hashCode(): Int {
         var r = id.hashCode()
@@ -35,6 +44,9 @@ data class TranscriptEntity(
         r = 31 * r + audioDeleted.hashCode()
         r = 31 * r + createdAt.hashCode()
         r = 31 * r + (speakerLabel?.hashCode() ?: 0)
+        r = 31 * r + (noSpeechProb?.hashCode() ?: 0)
+        r = 31 * r + (avgLogprob?.hashCode() ?: 0)
+        r = 31 * r + (compressionRatio?.hashCode() ?: 0)
         return r
     }
 }

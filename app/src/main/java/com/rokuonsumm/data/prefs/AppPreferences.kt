@@ -31,8 +31,18 @@ class AppPreferences(private val context: Context) {
         val KEY_SPEAKER_THRESHOLD = stringPreferencesKey("speaker_threshold")  // Float を文字列保存
         val KEY_SUMMARY_EXCLUDE_UNKNOWN = booleanPreferencesKey("summary_exclude_unknown")
 
+        // ── 品質ゲート閾値 (verbose_json メタデータ + 反復検出) ──
+        val KEY_Q_NOSPEECH_MAX = floatPreferencesKey("q_nospeech_max")
+        val KEY_Q_COMPRESSION_MAX = floatPreferencesKey("q_compression_max")
+        val KEY_Q_AVGLOGPROB_MIN = floatPreferencesKey("q_avglogprob_min")
+        val KEY_Q_REP_MIN_COUNT = intPreferencesKey("q_rep_min_count")
+
         const val DEFAULT_PROPER_NOUNS = "あやか\n純\nボタ美\nおかん\n田中ボタン店"
         const val DEFAULT_SPEAKER_THRESHOLD = 0.45f
+        const val DEFAULT_Q_NOSPEECH_MAX = 0.6f      // これ超で「非音声」フラグ
+        const val DEFAULT_Q_COMPRESSION_MAX = 2.4f   // これ超で「反復幻覚」フラグ(Whisper慣例値)
+        const val DEFAULT_Q_AVGLOGPROB_MIN = -1.0f   // これ未満で「低信頼」フラグ
+        const val DEFAULT_Q_REP_MIN_COUNT = 3        // 同一フレーズ連続反復の閾値
 
         const val DEFAULT_SEGMENT_DURATION_MIN = 5
         const val DEFAULT_BITRATE_BPS = 32_000
@@ -47,6 +57,18 @@ class AppPreferences(private val context: Context) {
     }
     val bitrateBpsFlow: Flow<Int> = context.dataStore.data.map {
         it[KEY_BITRATE_BPS] ?: DEFAULT_BITRATE_BPS
+    }
+    val qNoSpeechMaxFlow: Flow<Float> = context.dataStore.data.map {
+        it[KEY_Q_NOSPEECH_MAX] ?: DEFAULT_Q_NOSPEECH_MAX
+    }
+    val qCompressionMaxFlow: Flow<Float> = context.dataStore.data.map {
+        it[KEY_Q_COMPRESSION_MAX] ?: DEFAULT_Q_COMPRESSION_MAX
+    }
+    val qAvgLogprobMinFlow: Flow<Float> = context.dataStore.data.map {
+        it[KEY_Q_AVGLOGPROB_MIN] ?: DEFAULT_Q_AVGLOGPROB_MIN
+    }
+    val qRepMinCountFlow: Flow<Int> = context.dataStore.data.map {
+        it[KEY_Q_REP_MIN_COUNT] ?: DEFAULT_Q_REP_MIN_COUNT
     }
     val groqApiKeyFlow: Flow<String> = context.dataStore.data.map {
         it[KEY_GROQ_API_KEY] ?: ""
